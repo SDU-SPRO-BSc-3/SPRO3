@@ -56,7 +56,8 @@ static void MX_USART2_UART_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+char run = 0;
+char pwm = 0.25;
 /* USER CODE END 0 */
 
 /**
@@ -238,6 +239,35 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
+void motor_control(char motor)
+{
+	if(motor==1)
+	{
+		//left motor
+	}
+	if(motor==2)
+	{
+		//right motor
+	}
+
+}
+
+void direction_control(char direction)
+{
+	pwm = 0.25;
+//	if(run==1)
+//	{
+//		run =0;
+//		pwm=0.5;
+//		ms_delay(2);
+//		pwm=0.25;
+//	} make in interrupt service maybe
+	if(direction == 0) // left
+	{
+		//motor 1 stop
+		//motor 2 go
+	}
+}
 
 char IR_output(char command)
 {
