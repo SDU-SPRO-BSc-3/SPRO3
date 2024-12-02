@@ -67,7 +67,10 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+	char freedom[3];
+	freedom[0]=0;
+	freedom[1]=0;
+	freedom[2]=0;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -216,12 +219,68 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : IR_RIGHT_Pin IR_FRONT_Pin */
+  GPIO_InitStruct.Pin = IR_RIGHT_Pin|IR_FRONT_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : IR_LEFT_Pin */
+  GPIO_InitStruct.Pin = IR_LEFT_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(IR_LEFT_GPIO_Port, &GPIO_InitStruct);
+
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
 
+
+IR_output(char command)
+{
+	if(command == "front")
+	{
+		if(HAL_GPIO_ReadPin(IR_FRONT_GPIO_Port, IR_FRONT_Pin)==GPIO_PIN_RESET)
+		{
+			freedom[1]=0;
+		}
+		else
+			freedom[1]=1;
+	}
+	if(command == "left")
+	{
+		if(HAL_GPIO_ReadPin(IR_LEFT_GPIO_Port, IR_LEFT_Pin)==GPIO_PIN_RESET)
+		{
+			freedom[0]=0; //might not be right, check at the end (GPIO is pull up)
+		}
+		else
+			freedom[0]=1;
+
+	}
+	if(command == "right")
+	{
+		if(HAL_GPIO_ReadPin(IR_RIGHT_GPIO_Port, IR_RIGHT_Pin)==GPIO_PIN_RESET)
+		{
+			freedom[0]=0; //might not be right, check at the end (GPIO is pull up)
+		}
+		else
+			freedom[0]=1;
+	}
+}
+
+void check_sensors(int freedom[])
+{
+	int left, right, front, back;
+	front = IR_output("front");
+	if(front == 0){
+		left = IR_output("left");
+		right = IR_output("right");
+	}
+
+
+}
 /* USER CODE END 4 */
 
 /**
