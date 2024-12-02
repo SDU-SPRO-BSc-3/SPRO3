@@ -79,7 +79,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+  srand(time(NULL));
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -238,35 +238,47 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 
 
-IR_output(char command)
+char IR_output(char command)
 {
 	if(command == "front")
 	{
 		if(HAL_GPIO_ReadPin(IR_FRONT_GPIO_Port, IR_FRONT_Pin)==GPIO_PIN_RESET)
 		{
 			freedom[1]=0;
+			return 0;
 		}
 		else
+		{
 			freedom[1]=1;
+			return 1;
+		}
 	}
 	if(command == "left")
 	{
 		if(HAL_GPIO_ReadPin(IR_LEFT_GPIO_Port, IR_LEFT_Pin)==GPIO_PIN_RESET)
 		{
 			freedom[0]=0; //might not be right, check at the end (GPIO is pull up)
+			return 0;
 		}
 		else
+		{
 			freedom[0]=1;
+			return 1;
+		}
 
 	}
 	if(command == "right")
 	{
 		if(HAL_GPIO_ReadPin(IR_RIGHT_GPIO_Port, IR_RIGHT_Pin)==GPIO_PIN_RESET)
 		{
-			freedom[0]=0; //might not be right, check at the end (GPIO is pull up)
+			freedom[2]=0; //might not be right, check at the end (GPIO is pull up)
+			return 0;
 		}
 		else
-			freedom[0]=1;
+		{
+			freedom[2]=1;
+			return 1;
+		}
 	}
 }
 
@@ -277,6 +289,29 @@ void check_sensors(int freedom[])
 	if(front == 0){
 		left = IR_output("left");
 		right = IR_output("right");
+	}
+	if(left==1 && right==1)
+	{
+		char LR;
+		LR=rand()%2;
+		if(LR==0)
+		{
+			//turn left
+		}
+		if(LR==1)
+		{
+			//turn right
+		}
+	}
+	else if(left ==1)
+	{
+		//turn left
+	} else if(right == 1)
+	{
+		//turn right
+	} else
+	{
+		//turn back
 	}
 
 
