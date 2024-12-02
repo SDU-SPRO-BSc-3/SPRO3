@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdlib.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -67,10 +67,11 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-	char freedom[3];
-	freedom[0]=0;
-	freedom[1]=0;
-	freedom[2]=0;
+//	char freedom[3];
+//	freedom[0]=0;
+//	freedom[1]=0;
+//	freedom[2]=0;
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -79,7 +80,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-  srand(time(NULL));
+
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -240,55 +241,62 @@ static void MX_GPIO_Init(void)
 
 char IR_output(char command)
 {
-	if(command == "front")
+	if(command == 1)
 	{
 		if(HAL_GPIO_ReadPin(IR_FRONT_GPIO_Port, IR_FRONT_Pin)==GPIO_PIN_RESET)
 		{
-			freedom[1]=0;
+			// freedom[1]=0;
 			return 0;
 		}
 		else
 		{
-			freedom[1]=1;
+			// freedom[1]=1;
 			return 1;
 		}
 	}
-	if(command == "left")
+	if(command == 0)
 	{
 		if(HAL_GPIO_ReadPin(IR_LEFT_GPIO_Port, IR_LEFT_Pin)==GPIO_PIN_RESET)
 		{
-			freedom[0]=0; //might not be right, check at the end (GPIO is pull up)
+			// freedom[0]=0; //might not be right, check at the end (GPIO is pull up)
 			return 0;
 		}
 		else
 		{
-			freedom[0]=1;
+			// freedom[0]=1;
 			return 1;
 		}
 
 	}
-	if(command == "right")
+	if(command == 2)
 	{
 		if(HAL_GPIO_ReadPin(IR_RIGHT_GPIO_Port, IR_RIGHT_Pin)==GPIO_PIN_RESET)
 		{
-			freedom[2]=0; //might not be right, check at the end (GPIO is pull up)
+			// freedom[2]=0; //might not be right, check at the end (GPIO is pull up)
 			return 0;
 		}
 		else
 		{
-			freedom[2]=1;
+			// freedom[2]=1;
 			return 1;
 		}
 	}
+	return -1;
 }
 
-void check_sensors(int freedom[])
+//char ghost()
+//{
+//
+//}
+
+void check_sensors()
 {
-	int left, right, front, back;
-	front = IR_output("front");
+	char left, right, front, back, ghost;
+	front = IR_output(1);
+	// ghost = C_output();
 	if(front == 0){
-		left = IR_output("left");
-		right = IR_output("right");
+		left = IR_output(0);
+		right = IR_output(2);
 	}
 	if(left==1 && right==1)
 	{
