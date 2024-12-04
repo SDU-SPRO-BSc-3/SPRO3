@@ -32,6 +32,14 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 
+// Define sensor thresholds
+#define SENSOR_THRESHOLD 2000
+#define RED_THRESHOLD    150   // Adjust for the detected red level
+#define GREEN_THRESHOLD  150   // Adjust for the detected green level
+#define BLUE_THRESHOLD   150   // Adjust for the detected blue level
+
+// Color sensor address (e.g. TCS34725)
+#define COLOR_SENSOR_ADDRESS TCS3200 // what is our color sensor's I2C address
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -43,6 +51,10 @@
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+// Global handles
+ADC_HandleTypeDef hadc1;       // Handle for ADC1 to read IR sensor values
+TIM_HandleTypeDef htim2;       // Handle for Timer 2 to control PWM
+I2C_HandleTypeDef hi2c1;       // Handle for I2C1 to communicate with the color sensor
 
 /* USER CODE END PV */
 
@@ -51,7 +63,19 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
+void SystemClock_Config(void);
+void MX_GPIO_Init(void);
+void MX_TIM2_Init(void);
+void MX_ADC1_Init(void);
+void MX_I2C1_Init(void);
 
+uint32_t readIRSensor(ADC_HandleTypeDef *hadc, uint32_t channel);
+void readColorSensor(uint16_t *red, uint16_t *green, uint16_t *blue);
+void moveForward(void);
+void turnLeft(void);
+void turnRight(void);
+void stopMotors(void);
+void solveMaze(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -83,14 +107,17 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
+  MX_TIM2_Init();                // Initialize Timer 2 for PWM
+  MX_ADC1_Init();                // Initialize ADC1 for IR sensors
+  MX_I2C1_Init();                // Initialize I2C1 for color sensor communication
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);  // Start LEFT_MOTOR_PWM
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);  // Start RIGHT_MOTOR_PWM
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -98,6 +125,7 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
+	 solveMaze();
 
     /* USER CODE BEGIN 3 */
   }
@@ -221,6 +249,118 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+/**
+ * Reads an analog value from a specified ADC channel for IR sensors.
+ * hadc: Pointer to ADC handle (e.g., hadc1)
+ * channel: ADC channel to read (e.g., ADC_CHANNEL_0)
+ * Analog value from the specified channel
+ */
+uint32_t readIRSensor(ADC_HandleTypeDef *hadc, uint32_t channel) {
+    ADC_ChannelConfTypeDef sConfig = {0};
+
+    sConfig.Channel = channel;                  // Specify the ADC channel
+    sConfig.Rank = ADC_REGULAR_RANK_1;          // Set rank for single conversion
+    HAL_ADC_ConfigChannel(hadc, &sConfig);      // Apply configuration
+
+    HAL_ADC_Start(hadc);                        // Start ADC conversion
+    HAL_ADC_PollForConversion(hadc, HAL_MAX_DELAY); // Wait for conversion to complete
+    uint32_t value = HAL_ADC_GetValue(hadc);    // Retrieve the ADC value
+    HAL_ADC_Stop(hadc);                         // Stop the ADC
+
+    return value;                               // Return the sensor value
+}
+
+/**
+ * Reads RGB values from a color sensor via I2C.
+ * red: Pointer to store the red value
+ * green: Pointer to store the green value
+ * blue: Pointer to store the blue value
+ */
+void readColorSensor(uint16_t *red, uint16_t *green, uint16_t *blue) {
+    uint8_t buffer[6] = {0};
+
+    // Read 6 bytes of RGB data from the color sensor
+    HAL_I2C_Mem_Read(&hi2c1, COLOR_SENSOR_ADDRESS, 0x14 | 0x80, I2C_MEMADD_SIZE_8BIT, buffer, 6, HAL_MAX_DELAY);
+
+    *red = (buffer[1] << 8) | buffer[0];    // Combine high and low bytes for red
+    *green = (buffer[3] << 8) | buffer[2];  // Combine high and low bytes for green
+    *blue = (buffer[5] << 8) | buffer[4];   // Combine high and low bytes for blue
+}
+
+/**
+ * Moves the robot forward.
+ */
+void moveForward() {
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);  // LEFT_MOTOR_DIR: Forward
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET);  // RIGHT_MOTOR_DIR: Forward
+
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 200);   // LEFT_MOTOR_PWM
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 200);   // RIGHT_MOTOR_PWM
+}
+
+/**
+ * Turns the robot left.
+ */
+void turnLeft() {
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET); // LEFT_MOTOR_DIR: Reverse
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET);   // RIGHT_MOTOR_DIR: Forward
+
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 200);    // LEFT_MOTOR_PWM
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 200);    // RIGHT_MOTOR_PWM
+    HAL_Delay(500);  // Delay for turning duration (adjust as needed)
+}
+
+/**
+ * Turns the robot right.
+ */
+void turnRight() {
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);   // LEFT_MOTOR_DIR: Forward
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET); // RIGHT_MOTOR_DIR: Reverse
+
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 200);    // LEFT_MOTOR_PWM
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 200);    // RIGHT_MOTOR_PWM
+    HAL_Delay(500);  // Delay for turning duration (adjust as needed)
+}
+
+/**
+ * Stops both motors.
+ */
+void stopMotors() {
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 0);  // Stop LEFT_MOTOR_PWM
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 0);  // Stop RIGHT_MOTOR_PWM
+}
+
+/**
+ * Implements a simple maze-solving algorithm using IR sensors and a color sensor.
+ */
+void solveMaze() {
+    uint16_t red, green, blue;
+
+    while (1) {
+        // Read sensor values
+        uint32_t front = readIRSensor(&hadc1, ADC_CHANNEL_0);  // Front IR sensor
+        uint32_t left = readIRSensor(&hadc1, ADC_CHANNEL_1);   // Left IR sensor
+        uint32_t right = readIRSensor(&hadc1, ADC_CHANNEL_2);  // Right IR sensor
+        readColorSensor(&red, &green, &blue);                 // Read color sensor
+
+        // Check color sensor values for specific actions (e.g., stop on red)
+        if (red > RED_THRESHOLD && green < GREEN_THRESHOLD && blue < BLUE_THRESHOLD) {
+            stopMotors();  // Stop on red surface
+            HAL_Delay(2000);  // Pause for 2 seconds
+        } else if (front < SENSOR_THRESHOLD) {
+            moveForward();  // No wall ahead, move forward
+        } else if (left < SENSOR_THRESHOLD) {
+            turnLeft();     // Wall ahead, no wall to the left, turn left
+        } else if (right < SENSOR_THRESHOLD) {
+            turnRight();    // Wall ahead, no wall to the right, turn right
+        } else {
+            turnRight();    // Dead end, perform a U-turn
+            turnRight();
+        }
+
+        HAL_Delay(100);  // Delay for smoother movements (adjust as needed)
+    }
+}
 
 /* USER CODE END 4 */
 
