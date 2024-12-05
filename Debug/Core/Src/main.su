@@ -1,0 +1,13 @@
+../Core/Src/main.c:94:5:main	8	static
+../Core/Src/main.c:144:6:SystemClock_Config	88	static
+../Core/Src/main.c:191:13:MX_ADC1_Init	24	static
+../Core/Src/main.c:243:13:MX_TIM2_Init	64	static
+../Core/Src/main.c:306:13:MX_USART2_UART_Init	8	static
+../Core/Src/main.c:339:13:MX_GPIO_Init	48	static
+../Core/Src/main.c:396:10:readIRSensor	40	static
+../Core/Src/main.c:414:6:moveForward	8	static
+../Core/Src/main.c:425:6:turnLeft	8	static
+../Core/Src/main.c:439:6:turnRight	8	static
+../Core/Src/main.c:453:6:stopMotors	4	static
+../Core/Src/main.c:461:6:solveMaze	32	static
+../Core/Src/main.c:543:6:Error_Handler	4	static,ignoring_inline_asm
