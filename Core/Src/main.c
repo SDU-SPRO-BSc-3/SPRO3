@@ -462,8 +462,8 @@ void solveMaze() {
     while (1) {
         // Read sensor values
         uint32_t frontADC = readIRSensor(&hadc1, ADC_CHANNEL_0);  // Front IR sensor
-        uint32_t leftADC = readIRSensor(&hadc1, ADC_CHANNEL_1);   // Left IR sensor
-        uint32_t rightADC = readIRSensor(&hadc1, ADC_CHANNEL_2);  // Right IR sensor
+        uint32_t leftADC = readIRSensor(&hadc1, ADC_CHANNEL_4);   // Left IR sensor
+        uint32_t rightADC = readIRSensor(&hadc1, ADC_CHANNEL_6);  // Right IR sensor
         char front=0, left=0, right=0, tempsum=0;
 
 
