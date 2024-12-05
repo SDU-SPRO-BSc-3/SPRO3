@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdlib.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -38,8 +38,6 @@
 #define GREEN_THRESHOLD  150   // Adjust for the detected green level
 #define BLUE_THRESHOLD   150   // Adjust for the detected blue level
 
-// Color sensor address (e.g. TCS34725)
-#define COLOR_SENSOR_ADDRESS TCS3200 // what is our color sensor's I2C address
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -48,19 +46,25 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+ADC_HandleTypeDef hadc1;
+
+TIM_HandleTypeDef htim2;
+
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 // Global handles
 ADC_HandleTypeDef hadc1;       // Handle for ADC1 to read IR sensor values
 TIM_HandleTypeDef htim2;       // Handle for Timer 2 to control PWM
-I2C_HandleTypeDef hi2c1;       // Handle for I2C1 to communicate with the color sensor
+
 
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_TIM2_Init(void);
+static void MX_ADC1_Init(void);
 static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
 void SystemClock_Config(void);
@@ -91,7 +95,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+  // srand(time(NULL));
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -109,11 +113,13 @@ int main(void)
   /* USER CODE BEGIN SysInit */
   MX_TIM2_Init();                // Initialize Timer 2 for PWM
   MX_ADC1_Init();                // Initialize ADC1 for IR sensors
-  MX_I2C1_Init();                // Initialize I2C1 for color sensor communication
+
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_TIM2_Init();
+  MX_ADC1_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);  // Start LEFT_MOTOR_PWM
@@ -125,7 +131,6 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-	 solveMaze();
 
     /* USER CODE BEGIN 3 */
   }
@@ -176,6 +181,121 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief ADC1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_ADC1_Init(void)
+{
+
+  /* USER CODE BEGIN ADC1_Init 0 */
+
+  /* USER CODE END ADC1_Init 0 */
+
+  ADC_ChannelConfTypeDef sConfig = {0};
+
+  /* USER CODE BEGIN ADC1_Init 1 */
+
+  /* USER CODE END ADC1_Init 1 */
+
+  /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
+  */
+  hadc1.Instance = ADC1;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
+  hadc1.Init.Resolution = ADC_RESOLUTION_12B;
+  hadc1.Init.ScanConvMode = DISABLE;
+  hadc1.Init.ContinuousConvMode = DISABLE;
+  hadc1.Init.DiscontinuousConvMode = DISABLE;
+  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc1.Init.NbrOfConversion = 1;
+  hadc1.Init.DMAContinuousRequests = DISABLE;
+  hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  if (HAL_ADC_Init(&hadc1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_0;
+  sConfig.Rank = 1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN ADC1_Init 2 */
+
+  /* USER CODE END ADC1_Init 2 */
+
+}
+
+/**
+  * @brief TIM2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM2_Init(void)
+{
+
+  /* USER CODE BEGIN TIM2_Init 0 */
+
+  /* USER CODE END TIM2_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_OC_InitTypeDef sConfigOC = {0};
+
+  /* USER CODE BEGIN TIM2_Init 1 */
+
+  /* USER CODE END TIM2_Init 1 */
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 254;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 4294967295;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_PWM_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = 10;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM2_Init 2 */
+
+  /* USER CODE END TIM2_Init 2 */
+  HAL_TIM_MspPostInit(&htim2);
+
 }
 
 /**
@@ -244,6 +364,24 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : PC4 */
+  GPIO_InitStruct.Pin = GPIO_PIN_4;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : IR_SENSOR_FRONT_Pin */
+  GPIO_InitStruct.Pin = IR_SENSOR_FRONT_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(IR_SENSOR_FRONT_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : IR_SENSOR_LEFT_Pin */
+  GPIO_InitStruct.Pin = IR_SENSOR_LEFT_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(IR_SENSOR_LEFT_GPIO_Port, &GPIO_InitStruct);
+
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
 }
@@ -259,7 +397,7 @@ uint32_t readIRSensor(ADC_HandleTypeDef *hadc, uint32_t channel) {
     ADC_ChannelConfTypeDef sConfig = {0};
 
     sConfig.Channel = channel;                  // Specify the ADC channel
-    sConfig.Rank = ADC_REGULAR_RANK_1;          // Set rank for single conversion
+    // sConfig.Rank = ADC_REGULAR_RANK_1;          // Set rank for single conversion
     HAL_ADC_ConfigChannel(hadc, &sConfig);      // Apply configuration
 
     HAL_ADC_Start(hadc);                        // Start ADC conversion
@@ -268,23 +406,6 @@ uint32_t readIRSensor(ADC_HandleTypeDef *hadc, uint32_t channel) {
     HAL_ADC_Stop(hadc);                         // Stop the ADC
 
     return value;                               // Return the sensor value
-}
-
-/**
- * Reads RGB values from a color sensor via I2C.
- * red: Pointer to store the red value
- * green: Pointer to store the green value
- * blue: Pointer to store the blue value
- */
-void readColorSensor(uint16_t *red, uint16_t *green, uint16_t *blue) {
-    uint8_t buffer[6] = {0};
-
-    // Read 6 bytes of RGB data from the color sensor
-    HAL_I2C_Mem_Read(&hi2c1, COLOR_SENSOR_ADDRESS, 0x14 | 0x80, I2C_MEMADD_SIZE_8BIT, buffer, 6, HAL_MAX_DELAY);
-
-    *red = (buffer[1] << 8) | buffer[0];    // Combine high and low bytes for red
-    *green = (buffer[3] << 8) | buffer[2];  // Combine high and low bytes for green
-    *blue = (buffer[5] << 8) | buffer[4];   // Combine high and low bytes for blue
 }
 
 /**
@@ -308,6 +429,8 @@ void turnLeft() {
     __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 200);    // LEFT_MOTOR_PWM
     __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 200);    // RIGHT_MOTOR_PWM
     HAL_Delay(500);  // Delay for turning duration (adjust as needed)
+    moveForward();
+    HAL_Delay(200);
 }
 
 /**
@@ -320,6 +443,8 @@ void turnRight() {
     __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 200);    // LEFT_MOTOR_PWM
     __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 200);    // RIGHT_MOTOR_PWM
     HAL_Delay(500);  // Delay for turning duration (adjust as needed)
+    moveForward();
+    HAL_Delay(200);
 }
 
 /**
@@ -334,30 +459,77 @@ void stopMotors() {
  * Implements a simple maze-solving algorithm using IR sensors and a color sensor.
  */
 void solveMaze() {
-    uint16_t red, green, blue;
-
     while (1) {
         // Read sensor values
-        uint32_t front = readIRSensor(&hadc1, ADC_CHANNEL_0);  // Front IR sensor
-        uint32_t left = readIRSensor(&hadc1, ADC_CHANNEL_1);   // Left IR sensor
-        uint32_t right = readIRSensor(&hadc1, ADC_CHANNEL_2);  // Right IR sensor
-        readColorSensor(&red, &green, &blue);                 // Read color sensor
+        uint32_t frontADC = readIRSensor(&hadc1, ADC_CHANNEL_0);  // Front IR sensor
+        uint32_t leftADC = readIRSensor(&hadc1, ADC_CHANNEL_1);   // Left IR sensor
+        uint32_t rightADC = readIRSensor(&hadc1, ADC_CHANNEL_2);  // Right IR sensor
+        char front=0, left=0, right=0, tempsum=0;
 
-        // Check color sensor values for specific actions (e.g., stop on red)
-        if (red > RED_THRESHOLD && green < GREEN_THRESHOLD && blue < BLUE_THRESHOLD) {
-            stopMotors();  // Stop on red surface
-            HAL_Delay(2000);  // Pause for 2 seconds
-        } else if (front < SENSOR_THRESHOLD) {
-            moveForward();  // No wall ahead, move forward
-        } else if (left < SENSOR_THRESHOLD) {
-            turnLeft();     // Wall ahead, no wall to the left, turn left
-        } else if (right < SENSOR_THRESHOLD) {
-            turnRight();    // Wall ahead, no wall to the right, turn right
-        } else {
-            turnRight();    // Dead end, perform a U-turn
-            turnRight();
+
+        if (frontADC < SENSOR_THRESHOLD)
+            front = 0x01;
+        if(leftADC < SENSOR_THRESHOLD)
+        	left = 0x02;
+        if(rightADC < SENSOR_THRESHOLD)
+        	right = 0x04;
+
+        enum {
+              FLR= (0x01 | 0x02 | 0x04),
+              LR= (0 | 0x02 | 0x04),
+			  FL = (0x01 | 0x02 | 0),
+			  FR = (0x01 | 0 | 0x04),
+			  F = (0x01 | 0 | 0),
+			  L = (0 | 0x02 | 0),
+			  R = (0 | 0 | 0x04),
+			  DeadEnd = (0 | 0 | 0)
+        }STATE;
+
+        STATE = front | left | right;
+        if(tempsum == 0)
+        {
+			// stuck ?
         }
-
+        else
+		{
+        	char choice;
+			choice=rand()%tempsum;
+			switch(STATE){
+			case FLR: {
+				switch(choice){
+				case 0: turnLeft();
+				case 1: moveForward();
+				case 2: turnRight();
+				}
+			}
+			case LR: {
+				switch(choice){
+				case 0: turnLeft();
+				case 1: turnRight();
+				}
+			}
+			case FL: {
+				switch(choice){
+				case 0: moveForward();
+				case 1: turnLeft();
+				}
+			}
+			case FR:{
+				switch(choice){
+				case 0: moveForward();
+				case 1: turnLeft();
+				}
+			}
+			case F: moveForward();
+			case L: turnLeft();
+			case R: turnRight();
+			case DeadEnd: {
+				turnRight();
+				turnRight();
+			}
+			default: //should not get here
+			}
+		}
         HAL_Delay(100);  // Delay for smoother movements (adjust as needed)
     }
 }
