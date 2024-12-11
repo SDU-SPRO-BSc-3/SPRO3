@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdlib.h>
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -33,7 +34,7 @@
 /* USER CODE BEGIN PD */
 
 // Define sensor thresholds
-#define SENSOR_THRESHOLD 2000
+#define SENSOR_THRESHOLD 5000
 #define RED_THRESHOLD    150   // Adjust for the detected red level
 #define GREEN_THRESHOLD  150   // Adjust for the detected green level
 #define BLUE_THRESHOLD   150   // Adjust for the detected blue level
@@ -84,7 +85,16 @@ void solveMaze(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+//int _write(int file, char *ptr, int len)
+//{
+//	int i = 0;
+//	for(i=0;i<len;i++)
+//	{
+//		ITM_SendChar((*ptr++));
+//	}
+//	return len;
+//}
+char once = 0, adcOnce=0;
 /* USER CODE END 0 */
 
 /**
@@ -124,6 +134,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);  // Start LEFT_MOTOR_PWM
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);  // Start RIGHT_MOTOR_PWM
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -133,6 +144,14 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  if(once == 0)
+	  {
+	  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+	  HAL_Delay(100);
+	  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+	  once++;
+	  }
+	solveMaze();
   }
   /* USER CODE END 3 */
 }
@@ -404,7 +423,6 @@ uint32_t readIRSensor(ADC_HandleTypeDef *hadc, uint32_t channel) {
     HAL_ADC_PollForConversion(hadc, HAL_MAX_DELAY); // Wait for conversion to complete
     uint32_t value = HAL_ADC_GetValue(hadc);    // Retrieve the ADC value
     HAL_ADC_Stop(hadc);                         // Stop the ADC
-
     return value;                               // Return the sensor value
 }
 
@@ -465,14 +483,30 @@ void solveMaze() {
         uint32_t leftADC = readIRSensor(&hadc1, ADC_CHANNEL_4);   // Left IR sensor
         uint32_t rightADC = readIRSensor(&hadc1, ADC_CHANNEL_6);  // Right IR sensor
         char front=0, left=0, right=0, tempsum=0;
+//        HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+//        HAL_Delay(10);
+//        HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 
+        if (frontADC != 0 && frontADC !=NULL)
+        {
+        	front = 0x01;
+        }
 
-        if (frontADC < SENSOR_THRESHOLD)
-            front = 0x01;
-        if(leftADC < SENSOR_THRESHOLD)
+        if(leftADC > SENSOR_THRESHOLD){
         	left = 0x02;
-        if(rightADC < SENSOR_THRESHOLD)
+        	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+        	        	HAL_Delay(100);
+        	        	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+        	        	HAL_Delay(100);
+        	        	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+        				HAL_Delay(100);
+        				HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+        	        	HAL_Delay(1000);
+    }
+        if(rightADC > SENSOR_THRESHOLD){
         	right = 0x04;
+
+        }
 
         enum {
               FLR= (0x01 | 0x02 | 0x04),
@@ -486,12 +520,6 @@ void solveMaze() {
         }STATE;
 
         STATE = front | left | right;
-        if(tempsum == 0)
-        {
-			// stuck ?
-        }
-        else
-		{
         	char choice;
 			choice=rand()%tempsum;
 			switch(STATE){
@@ -531,7 +559,7 @@ void solveMaze() {
 			}
 		}
         HAL_Delay(100);  // Delay for smoother movements (adjust as needed)
-    }
+
 }
 
 /* USER CODE END 4 */
