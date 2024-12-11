@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdlib.h>
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -33,7 +34,7 @@
 /* USER CODE BEGIN PD */
 
 // Define sensor thresholds
-#define SENSOR_THRESHOLD 2000
+#define SENSOR_THRESHOLD 1.1
 #define RED_THRESHOLD    150   // Adjust for the detected red level
 #define GREEN_THRESHOLD  150   // Adjust for the detected green level
 #define BLUE_THRESHOLD   150   // Adjust for the detected blue level
@@ -133,6 +134,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	 solveMaze();
   }
   /* USER CODE END 3 */
 }
@@ -403,7 +405,9 @@ uint32_t readIRSensor(ADC_HandleTypeDef *hadc, uint32_t channel) {
     HAL_ADC_Start(hadc);                        // Start ADC conversion
     HAL_ADC_PollForConversion(hadc, HAL_MAX_DELAY); // Wait for conversion to complete
     uint32_t value = HAL_ADC_GetValue(hadc);    // Retrieve the ADC value
-    HAL_ADC_Stop(hadc);                         // Stop the ADC
+    HAL_ADC_Stop(hadc);
+
+    printf("ADC: %lu \n", value);// Stop the ADC
 
     return value;                               // Return the sensor value
 }
