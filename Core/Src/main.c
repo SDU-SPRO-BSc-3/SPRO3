@@ -34,7 +34,7 @@
 /* USER CODE BEGIN PD */
 
 // Define sensor thresholds
-#define SENSOR_THRESHOLD 5000
+#define SENSOR_THRESHOLD 1320
 #define RED_THRESHOLD    150   // Adjust for the detected red level
 #define GREEN_THRESHOLD  150   // Adjust for the detected green level
 #define BLUE_THRESHOLD   150   // Adjust for the detected blue level
@@ -147,7 +147,7 @@ int main(void)
 	  if(once == 0)
 	  {
 	  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-	  HAL_Delay(100);
+	  HAL_Delay(1000);
 	  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 	  once++;
 	  }
@@ -482,6 +482,7 @@ void solveMaze() {
         uint32_t frontADC = readIRSensor(&hadc1, ADC_CHANNEL_0);  // Front IR sensor
         uint32_t leftADC = readIRSensor(&hadc1, ADC_CHANNEL_4);   // Left IR sensor
         uint32_t rightADC = readIRSensor(&hadc1, ADC_CHANNEL_6);  // Right IR sensor
+
         char front=0, left=0, right=0, tempsum=0;
 //        HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 //        HAL_Delay(10);
@@ -492,17 +493,11 @@ void solveMaze() {
         	front = 0x01;
         }
 
-        if(leftADC > SENSOR_THRESHOLD){
+        if(leftADC < SENSOR_THRESHOLD){
         	left = 0x02;
         	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-        	        	HAL_Delay(100);
-        	        	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-        	        	HAL_Delay(100);
-        	        	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-        				HAL_Delay(100);
-        				HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-        	        	HAL_Delay(1000);
-    }
+    }else {HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);}
+
         if(rightADC > SENSOR_THRESHOLD){
         	right = 0x04;
 

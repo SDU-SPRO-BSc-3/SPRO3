@@ -10,4 +10,4 @@
 ../Core/Src/main.c:457:6:turnRight	1
 ../Core/Src/main.c:471:6:stopMotors	1
 ../Core/Src/main.c:479:6:solveMaze	23
-../Core/Src/main.c:571:6:Error_Handler	1
+../Core/Src/main.c:566:6:Error_Handler	1
