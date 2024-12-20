@@ -121,8 +121,6 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-  MX_TIM2_Init();                // Initialize Timer 2 for PWM
-  MX_ADC1_Init();                // Initialize ADC1 for IR sensors
 
   /* USER CODE END SysInit */
 
@@ -132,8 +130,6 @@ int main(void)
   MX_ADC1_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);  // Start LEFT_MOTOR_PWM
-  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);  // Start RIGHT_MOTOR_PWM
 
   /* USER CODE END 2 */
 
@@ -151,6 +147,7 @@ int main(void)
 	  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 	  once++;
 	  }
+	moveForward();
 	solveMaze();
   }
   /* USER CODE END 3 */
@@ -274,9 +271,9 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 254;
+  htim2.Init.Prescaler = 71;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 4294967295;
+  htim2.Init.Period = 999;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -299,7 +296,7 @@ static void MX_TIM2_Init(void)
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 10;
+  sConfigOC.Pulse = 500;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
@@ -430,22 +427,22 @@ uint32_t readIRSensor(ADC_HandleTypeDef *hadc, uint32_t channel) {
  * Moves the robot forward.
  */
 void moveForward() {
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);  // LEFT_MOTOR_DIR: Forward
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET);  // RIGHT_MOTOR_DIR: Forward
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET);  // LEFT_MOTOR_DIR: Forward
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_SET);  // RIGHT_MOTOR_DIR: Forward
 
-    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 200);   // LEFT_MOTOR_PWM
-    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 200);   // RIGHT_MOTOR_PWM
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 500);   // LEFT_MOTOR_PWM
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 500);   // RIGHT_MOTOR_PWM
 }
 
 /**
  * Turns the robot left.
  */
 void turnLeft() {
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET); // LEFT_MOTOR_DIR: Reverse
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET);   // RIGHT_MOTOR_DIR: Forward
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET); // LEFT_MOTOR_DIR: Reverse
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_SET);   // RIGHT_MOTOR_DIR: Forward
 
-    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 200);    // LEFT_MOTOR_PWM
-    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 200);    // RIGHT_MOTOR_PWM
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 500);    // LEFT_MOTOR_PWM
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 500);    // RIGHT_MOTOR_PWM
     HAL_Delay(500);  // Delay for turning duration (adjust as needed)
     moveForward();
     HAL_Delay(200);
@@ -455,11 +452,11 @@ void turnLeft() {
  * Turns the robot right.
  */
 void turnRight() {
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);   // LEFT_MOTOR_DIR: Forward
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET); // RIGHT_MOTOR_DIR: Reverse
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET);   // LEFT_MOTOR_DIR: Forward
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_RESET); // RIGHT_MOTOR_DIR: Reverse
 
-    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 200);    // LEFT_MOTOR_PWM
-    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 200);    // RIGHT_MOTOR_PWM
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 500);    // LEFT_MOTOR_PWM
+    __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 500);    // RIGHT_MOTOR_PWM
     HAL_Delay(500);  // Delay for turning duration (adjust as needed)
     moveForward();
     HAL_Delay(200);
@@ -488,19 +485,16 @@ void solveMaze() {
 //        HAL_Delay(10);
 //        HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 
-        if (frontADC != 0 && frontADC !=NULL)
-        {
+        if (frontADC < SENSOR_THRESHOLD){
         	front = 0x01;
         }
 
         if(leftADC < SENSOR_THRESHOLD){
         	left = 0x02;
-        	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-    }else {HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);}
+        }
 
-        if(rightADC > SENSOR_THRESHOLD){
+        if(rightADC < SENSOR_THRESHOLD){
         	right = 0x04;
-
         }
 
         enum {
