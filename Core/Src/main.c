@@ -112,8 +112,6 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-  MX_TIM2_Init();                // Initialize Timer 2 for PWM
-  MX_ADC1_Init();                // Initialize ADC1 for IR sensors
 
   /* USER CODE END SysInit */
 
