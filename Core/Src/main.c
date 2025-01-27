@@ -140,13 +140,13 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  if(once == 0)
-	  {
-	  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-	  HAL_Delay(1000);
-	  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-	  once++;
-	  }
+	  // if(once == 0)
+	  // {
+	  // HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+	  // HAL_Delay(1000);
+	  // HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+	  // once++;
+	  // }
 	moveForward();
 	solveMaze();
   }
@@ -303,6 +303,7 @@ static void MX_TIM2_Init(void)
   {
     Error_Handler();
   }
+  sConfigOC.Pulse = 10;
   if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
   {
     Error_Handler();
