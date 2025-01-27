@@ -511,9 +511,9 @@ void solveMaze() {
 
         STATE = front | left | right;
         	char choice;
-			choice=rand()%tempsum;
 			switch(STATE){
 			case FLR: {
+				choice=rand()%3;
 				switch(choice){
 				case 0: turnLeft();
 				case 1: moveForward();
@@ -521,18 +521,21 @@ void solveMaze() {
 				}
 			}
 			case LR: {
+				choice=rand()%2;
 				switch(choice){
 				case 0: turnLeft();
 				case 1: turnRight();
 				}
 			}
 			case FL: {
+				choice=rand()%2;
 				switch(choice){
 				case 0: moveForward();
 				case 1: turnLeft();
 				}
 			}
 			case FR:{
+				choice=rand()%2;
 				switch(choice){
 				case 0: moveForward();
 				case 1: turnLeft();
