@@ -1,13 +1,14 @@
-../Core/Src/main.c:95:5:main	1
-../Core/Src/main.c:146:6:SystemClock_Config	3
-../Core/Src/main.c:193:13:MX_ADC1_Init	3
-../Core/Src/main.c:245:13:MX_TIM2_Init	7
-../Core/Src/main.c:308:13:MX_USART2_UART_Init	2
-../Core/Src/main.c:341:13:MX_GPIO_Init	1
-../Core/Src/main.c:398:10:readIRSensor	1
-../Core/Src/main.c:418:6:moveForward	1
-../Core/Src/main.c:429:6:turnLeft	1
-../Core/Src/main.c:443:6:turnRight	1
-../Core/Src/main.c:457:6:stopMotors	1
-../Core/Src/main.c:465:6:solveMaze	23
-../Core/Src/main.c:547:6:Error_Handler	1
+
+../Core/Src/main.c:104:5:main	2
+../Core/Src/main.c:160:6:SystemClock_Config	3
+../Core/Src/main.c:207:13:MX_ADC1_Init	3
+../Core/Src/main.c:259:13:MX_TIM2_Init	7
+../Core/Src/main.c:322:13:MX_USART2_UART_Init	2
+../Core/Src/main.c:355:13:MX_GPIO_Init	1
+../Core/Src/main.c:412:10:readIRSensor	1
+../Core/Src/main.c:429:6:moveForward	1
+../Core/Src/main.c:440:6:turnLeft	1
+../Core/Src/main.c:454:6:turnRight	1
+../Core/Src/main.c:468:6:stopMotors	1
+../Core/Src/main.c:476:6:solveMaze	22
+../Core/Src/main.c:560:6:Error_Handler	1
